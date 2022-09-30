@@ -66,6 +66,7 @@ class CF(object):
         """
         eps = 1e-6
         self.S = self.dist_func(self.Ybar.T, self.Ybar.T)
+        print(self.S)
 
     def fit(self):
         self.normalize_matrix()
@@ -78,6 +79,7 @@ class CF(object):
         # tìm tất cả user đã rate item i
         ids = np.where(self.Y_data[:, 1] == i)[0].astype(np.int32)
         users_rated_i = (self.Y_data[ids, 0]).astype(np.int32)
+
         sim = self.S[u, users_rated_i]
         a = np.argsort(sim)[-self.k:]
         nearest_s = sim[a]
@@ -152,4 +154,5 @@ data = np.array(df)
 print(data.shape)          
 model = CF(data)
 model.fit()
-model.print_recommendation()
+print("recomend:")
+print(model.recommend(3))
