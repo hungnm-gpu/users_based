@@ -1,11 +1,29 @@
 
 import pandas as pd
 import numpy as np
-path = "line_2021-07-01_19_09_29.dat"
+path = "data_ptit_code.dat"
 
-df = pd.read_table(path)
-data = np.array(df)
+# data = np.loadtxt(path)
+data = np.array([ [1, 1 , 1],
+                [2, 2, -1],
+                [2, 2, 1],
+                [1, 1, -1]])
+
 print(data.shape)
+users = data[:,0]
+n_users = np.max(data[:,0])
+print(n_users)
+data_new = []
+list_ids = []
+for i in range(1,n_users+1):
+    ids = np.where(users == i)[0].astype(np.int32)
+    rating = data[ids, 2]
+    max_rating = np.max(rating)
+    if max_rating == 1:
+        ids_rating_max = np.where(rating = rating.max)[0].astype(np.int32)
+        list_ids
+
+    print(ids)
 
 
 # def chia_bang(path):

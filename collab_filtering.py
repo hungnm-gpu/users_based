@@ -9,7 +9,7 @@ class CF(object):
     class Collaborative Filtering, hệ thống đề xuất dựa trên sự tương đồng
     giữa các users với nhau, giữa các items với nhau
     """
-    def __init__(self, data_matrix, k = 2, dist_func=cosine_similarity, uuCF=1):
+    def __init__(self, data_matrix, k = 2, dist_func=cosine_similarity, uuCF=0):
         """
         Khởi tạo CF với các tham số đầu vào:
             data_matrix: ma trận Utility, gồm 3 cột, mỗi cột gồm 3 số liệu: user_id, item_id, rating.
@@ -20,6 +20,7 @@ class CF(object):
         """
         self.uuCF = uuCF  # user-user (1) or item-item (0) CF
         self.Y_data = data_matrix if uuCF else data_matrix[:, [1, 0, 2]]
+        self.Y_data = np.array(self.Y_data, dtype = np.float64)
         self.k = k
         self.dist_func = dist_func
         self.Ybar_data = None
@@ -40,33 +41,47 @@ class CF(object):
         Sau đó thực hiện chuẩn hóa bằng cách trừ các ratings đã biết của item cho trung bình cộng
         ratings tương ứng của item đó, đồng thời thay các ratings chưa biết bằng 0.
         """
-        users = self.Y_data[:, 0]
+
+        users = self.Y_data[:, 0] # trả về cột đầu tiên trong data
         print(users.shape)
-        self.Ybar_data = self.Y_data.copy()
-        self.mu = np.zeros((self.n_users,))
+        
+        self.Ybar_data = self.Y_data.copy() # copy ma trận đầu vào
+        self.mu = np.zeros((self.n_users,)) # khởi tạo mảng 0 có đọ dài = n_users
+        check = 0
         for n in range(1, self.n_users ):
-            ids = np.where(users == n)[0].astype(np.int32)
+            ids = np.where(users == n)[0].astype(np.int32) # trả về các vị trí của user = n
+            # ids 3
             item_ids = self.Y_data[ids, 1]
             ratings = self.Y_data[ids, 2]
+            ratings = np.array(ratings, dtype = np.float64)
             # take mean
             m = np.mean(ratings)
             if np.isnan(m):
                 m = 0  # để tránh mảng trống và nan value
             self.mu[n] = m
             # chuẩn hóa
-            self.Ybar_data[ids, 2] = ratings - self.mu[n]
-
+            self.Ybar_data[ids, 2] =  ratings - self.mu[n]
+            # if check == 0:
+            #     print(tmp)
+            #     print(self.Ybar_data[ids, 2])
+            #     check = 1
+        # print(type(self.Ybar_data[ids, 2][1]))
+        # print(type(self.mu[n]))
+        # print(self.Ybar_data[ids, 2])
         self.Ybar = sparse.coo_matrix((self.Ybar_data[:, 2],
                                        (self.Ybar_data[:, 1], self.Ybar_data[:, 0])), (self.n_items, self.n_users))
         self.Ybar = self.Ybar.tocsr()
+        print(self.Ybar[1,1])
 
     def similarity(self):
         """
         Tính độ tương đồng giữa các user và các item
         """
         eps = 1e-6
+        # tính toán độ tương đồng của cặp user theo item và rating
         self.S = self.dist_func(self.Ybar.T, self.Ybar.T)
-        print(self.S)
+        # print(self.S[:10,:10])
+        print(self.S.shape)
 
     def fit(self):
         self.normalize_matrix()
@@ -79,15 +94,17 @@ class CF(object):
         # tìm tất cả user đã rate item i
         ids = np.where(self.Y_data[:, 1] == i)[0].astype(np.int32)
         users_rated_i = (self.Y_data[ids, 0]).astype(np.int32)
-
+        # print(users_rated_i)
         sim = self.S[u, users_rated_i]
         a = np.argsort(sim)[-self.k:]
         nearest_s = sim[a]
         r = self.Ybar[i, users_rated_i[a]]
+        # print(f"neatest {u} vs {users_rated_i[a]}")
+        # print(nearest_s)
+        # print(r)
         if normalized:
             # cộng với 1e-8, để tránh chia cho 0
             return (r * nearest_s)[0] / (np.abs(nearest_s).sum() + 1e-8)
-
         return (r * nearest_s)[0] / (np.abs(nearest_s).sum() + 1e-8) + self.mu[u]
 
     def pred(self, u, i, normalized=1):
@@ -101,21 +118,27 @@ class CF(object):
         for i in range(self.n_items):
             print(i)
 
-    def recommend(self, u):
 
+
+    def recommend(self, u, limit = 10):
         ids = np.where(self.Y_data[:, 0] == u)[0]
         items_rated_by_u = self.Y_data[ids, 1].tolist()
-        recommended_items = []
+        recommended_items = np.array([])
+        rating_for_sort = np.array([])
         for i in range(self.n_items):
             if i not in items_rated_by_u:
                 rating = self.__pred(u, i)
-                if rating > 0:
-                    recommended_items.append(i)
 
-        return recommended_items
+                # print(f'ranking item {i}: {rating}' )
+                if rating > 0:
+                    rating_for_sort = np.append(rating_for_sort, rating)
+                    recommended_items = np.append(recommended_items,i)
+        tmp = np.argsort(rating_for_sort)[-limit:]
+        ans = recommended_items[tmp]
+        ans = np.array(ans, dtype= np.int32)
+        return ans
 
     def recommend_top(self, u, top_x):
-
         ids = np.where(self.Y_data[:, 0] == u)[0]
         items_rated_by_u = self.Y_data[ids, 1].tolist()
         item = {'id': None, 'similar': None}
@@ -155,4 +178,5 @@ print(data.shape)
 model = CF(data)
 model.fit()
 print("recomend:")
-print(model.recommend(3))
+for i in range(1,100):
+    print(f'user {i} : {model.recommend(i)}')
