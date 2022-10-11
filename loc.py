@@ -11,19 +11,24 @@ data = np.array([ [1, 1 , 1],
 
 print(data.shape)
 users = data[:,0]
+items = data[:,1]
+r = data[:,2]
+l = users.shape[0]
 n_users = np.max(data[:,0])
 print(n_users)
 data_new = []
 list_ids = []
-for i in range(1,n_users+1):
-    ids = np.where(users == i)[0].astype(np.int32)
-    rating = data[ids, 2]
-    max_rating = np.max(rating)
-    if max_rating == 1:
-        ids_rating_max = np.where(rating = rating.max)[0].astype(np.int32)
-        list_ids
+dict = {}
+for i in range(l):
+    u = users[i]
+    p = items[i]
+    if (u,p) in  dict.keys():
+        dict[(u,p)] = max(dict[(u,p)] , r[i])
+    else:
+        dict[(u,p)] = r[i]
 
-    print(ids)
+    
+
 
 
 # def chia_bang(path):
