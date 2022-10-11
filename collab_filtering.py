@@ -9,7 +9,7 @@ class CF(object):
     class Collaborative Filtering, hệ thống đề xuất dựa trên sự tương đồng
     giữa các users với nhau, giữa các items với nhau
     """
-    def __init__(self, data_matrix, k = 2, dist_func=cosine_similarity, uuCF=0):
+    def __init__(self, data_matrix, k = 2, dist_func=cosine_similarity, uuCF=1):
         """
         Khởi tạo CF với các tham số đầu vào:
             data_matrix: ma trận Utility, gồm 3 cột, mỗi cột gồm 3 số liệu: user_id, item_id, rating.
@@ -119,7 +119,6 @@ class CF(object):
             print(i)
 
 
-
     def recommend(self, u, limit = 10):
         ids = np.where(self.Y_data[:, 0] == u)[0]
         items_rated_by_u = self.Y_data[ids, 1].tolist()
@@ -170,13 +169,21 @@ class CF(object):
             else:
                 print('for user(s) : ', recommended_items)
 
+from loc2 import *
 
-path = "line_2021-07-01_19_09_29.dat"
-df = pd.read_table(path)
-data = np.array(df) 
-print(data.shape)          
-model = CF(data)
+model = CF(train)
 model.fit()
 print("recomend:")
-for i in range(1,100):
-    print(f'user {i} : {model.recommend(i)}')
+list_recomend = []
+n_users = int(np.max(train[:, 0]))+1
+for i in range(1,n_users):
+    tmp = model.recommend(i)
+    list_recomend.append(model.recommend(i))
+    if i %100 == 1:
+        print(f'user {i} : {tmp}')
+
+list_recomend = np.array(list_recomend)
+# print(list_recomend)
+print(list_recomend.shape)
+print("Done collab")
+
