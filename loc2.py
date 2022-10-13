@@ -1,7 +1,7 @@
 
 import pandas as pd
 import numpy as np
-path = "line_2021-07-01_19_09_29.dat"
+path = "test.dat"
 data = np.loadtxt(path)
 list_remove = []
 def prepare_data(data):
@@ -18,7 +18,7 @@ def prepare_data(data):
     for i in range(1, n_users):
         ids = np.where(users == i)[0].astype(np.int32)
         x = int(ids.shape[0])
-        if x < 30:
+        if x < 10:
             list_remove.append(i)
             continue
         n = 10

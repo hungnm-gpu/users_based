@@ -126,13 +126,13 @@ class CF(object):
             print(i)
 
     def recommend(self, u, limit=10):
-        ids = np.where(self.Y_data[:, 1] == u)[0]
-        items_rated_by_u = self.Y_data[ids, 1].tolist()
+        ids = np.where(self.Y_data[:, 1] == u)[0].astype(np.int32)
+        items_rated_by_u = self.Y_data[ids, 0].tolist()
         recommended_items = np.array([])
         rating_for_sort = np.array([])
-        for i in range(self.n_items):
+        for i in range(self.n_users):
             if i not in items_rated_by_u:
-                rating = self.__pred(u, i)
+                rating = self.__pred(i, u)
                 # print(f'ranking item {i}: {rating}' )
                 if rating > 0:
                     rating_for_sort = np.append(rating_for_sort, rating)
@@ -174,24 +174,24 @@ class CF(object):
             else:
                 print('for user(s) : ', recommended_items)
     
-data = np.loadtxt("line_2021-07-01_19_09_29_1.dat")
-
-model = CF(data)
+# data = np.loadtxt("line_2021-07-01_19_09_29_1.dat")
+from loc2 import train
+model = CF(train)
 model.fit()
 print("recomend:")
 list_recomend = []
-n_users = int(np.max(data[:, 0])) + 1
-model.print_list_item()
-for i in range(1, 10):
-    print("recomend: ", model.recommend(i))
+n_users = int(np.max(train[:, 0])) + 1
+# model.print_list_item()
+# for i in range(1, 10):
+#     print(f"recomend for {i}: ", model.recommend(i))
 
-# for i in range(1, n_users):
-#     tmp = model.recommend(i)
-#     list_recomend.append(tmp)
-#     print(f'user {i} : {tmp}')
-# list_recomend = np.array(list_recomend)
-# print("list_recomend")
-# print(list_recomend)
-# print(len(list_recomend))
-# print("Done collab")
+for i in range(1, n_users):
+    tmp = model.recommend(i)
+    list_recomend.append(tmp)
+    print(f'user {i} : {tmp}')
+list_recomend = np.array(list_recomend)
+print("list_recomend")
+print(list_recomend)
+print(len(list_recomend))
+print("Done collab")
 
